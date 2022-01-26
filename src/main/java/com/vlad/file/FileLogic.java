@@ -137,7 +137,7 @@ public class FileLogic {
     }
 
     private void cleanFile(File tempfile) throws IOException { //
-        List<String> lines = new ArrayList<>();
+        File outputFile = File.createTempFile("text2", ".temp", null);
 
         try (Scanner readerFile = new Scanner(tempfile)) {
             while (readerFile.hasNextLine()) {
@@ -153,12 +153,16 @@ public class FileLogic {
         } catch (Exception ex) {
         }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(tempfile, false));
-        for (String unique : lines) {
-            writer.write(unique);
-            writer.newLine();
+        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)))) {
+            Files.write(Paths.get(String.valueOf(outputFile)),
+                    stream
+                            .map(line-> {
+                                return line;
+                            })
+                            .collect(Collectors.joining("\n")).getBytes());
         }
-        writer.close();
+
+
     }
 
     private int deleteDoubles(File tempfile) throws IOException {
