@@ -1,8 +1,12 @@
 package com.vlad.file;
 
+import com.vlad.file.db.RocksDBRepository;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,50 +45,14 @@ public class FileLogic {
         this.progressBar = progressBar;
     }
 
-    public int deleteBase(File tempfile, String pack, int init, int sum) throws IOException {
+    public long deleteBase(File tempfile, String pack, int init, int sum) throws IOException {
         File outputFile = File.createTempFile("text2", ".temp", null);
-        HashSet<String> set = new HashSet<>();
+        RocksDBRepository db = new RocksDBRepository(pack);
 
-        int detect = 0; // всего в базе
-
-        File packet = new File(System.getProperty("user.dir") + "/base" + "/" + pack);
-        if (!packet.exists()) {
-            packet.mkdirs();
-        }
+        long detect = db.countLines(); // всего в базе
 
         int count = 0;
-        sum = sum / 2;
 
-        try (Stream<Path> paths = Files.walk(Paths.get(System.getProperty("user.dir") + "/base" + "/" + pack))) {
-            List<Path> ways = paths.filter(Files::isRegularFile).collect(Collectors.toList());
-            for (int i = 0; i < ways.size(); i++) {
-                try (Scanner readerFile = new Scanner(ways.get(i))) {
-                    while (readerFile.hasNextLine()) {
-                        readerFile.nextLine();
-                        count += 1;
-                        detect++;
-                    }
-                } catch (Exception ex) {
-                }
-            }
-            int newCount = count / sum;
-            count = 0;
-            for (int i = 0; i < ways.size(); i++) {
-                try (Scanner readerFile = new Scanner(ways.get(i))) {
-                    while (readerFile.hasNextLine()) {
-                        set.add(readerFile.nextLine());
-                        count++;
-                        if (count >= newCount) {
-                            init++;
-                            setProgress(init);
-                        }
-                    }
-                } catch (Exception ex) {
-                }
-            }
-        }
-
-        count = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(tempfile))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -94,19 +62,20 @@ public class FileLogic {
             e.printStackTrace();
         }
 
-        int newCount = count/sum;
+        int newCount = count/sum; //сумма за процент
         count = 0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(tempfile));
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (!set.contains(line)) {
+                if (db.find(line) == null) {
                     writer.write(line + System.lineSeparator());
                     count++;
                     if (count >= newCount) {
                         init++;
                         setProgress(init);
+                        count = 0;
                     }
                 }
             }
@@ -139,30 +108,24 @@ public class FileLogic {
     private void cleanFile(File tempfile) throws IOException { //
         File outputFile = File.createTempFile("text2", ".temp", null);
 
-        try (Scanner readerFile = new Scanner(tempfile)) {
-            while (readerFile.hasNextLine()) {
-                String line = readerFile.nextLine();
-                line = line.trim();
-                line = line.replace(';', ':');
-                line = line.replaceAll("\"", "");
-                if (VALID_STRING.matcher(line).matches()) {
-                    lines.add(line);
-                }
-                line = null;
-            }
-        } catch (Exception ex) {
+        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), StandardCharsets.ISO_8859_1);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                    stream.forEach(line -> {
+                        line = line.trim();
+                        line = line.replace(';', ':');
+                        line = line.replaceAll("\"", "");
+                        if (VALID_STRING.matcher(line).matches()) {
+                            try {
+                                writer.write(line);
+                                writer.newLine();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
         }
-
-        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)))) {
-            Files.write(Paths.get(String.valueOf(outputFile)),
-                    stream
-                            .map(line-> {
-                                return line;
-                            })
-                            .collect(Collectors.joining("\n")).getBytes());
-        }
-
-
+        tempfile.delete();
+        outputFile.renameTo(tempfile);
     }
 
     private int deleteDoubles(File tempfile) throws IOException {

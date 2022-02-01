@@ -1,4 +1,4 @@
-package com.vlad.file;
+package com.vlad.file.extra;
 
 import javax.swing.*;
 import java.io.*;
