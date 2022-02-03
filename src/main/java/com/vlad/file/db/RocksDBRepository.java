@@ -4,39 +4,50 @@ import org.rocksdb.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
-import java.util.Optional;
 
 
-public class RocksDBRepository{
+public class RocksDBRepository {
 
     private RocksDB db;
 
-    public RocksDBRepository(String dbname) {
+    public RocksDBRepository(String dbname, boolean open) {
         RocksDB.loadLibrary();
+        Statistics stat = new Statistics();
         final Options options = new Options();
         options.setCreateIfMissing(true) //если базы нет, создается новая
                 .setCompressionType(CompressionType.SNAPPY_COMPRESSION) //обычная компрессия
                 .setIncreaseParallelism(8)
+                .setMaxBackgroundJobs(8)
                 .setEnablePipelinedWrite(true)
-                .setWriteBufferSize(64 * 1024 * 1024 * 10);
+                .setWriteBufferSize(1000 * 1024 * 1024)
+                .setStatistics(stat); //разрешаем паралельки
 
-       // .setAllowConcurrentMemtableWrite(true); //азрешаем паралельки
+
+        Filter bloomFilter = new BloomFilter(15);
+        BlockBasedTableConfig tableConfig = new BlockBasedTableConfig();
+
+        tableConfig.setFilter(bloomFilter)//настройки для таблицы
+                .optimizeFiltersForMemory();
+        options.setTableFormatConfig(tableConfig);
 
         File baseDir = new File(System.getProperty("user.dir") + "/databases", dbname);
         try {
             Files.createDirectories(baseDir.getParentFile().toPath());
             Files.createDirectories(baseDir.getAbsoluteFile().toPath());
-            db = RocksDB.open(options, baseDir.getAbsolutePath());
-            System.out.println("db initialized");
+            if (open) {
+                db = RocksDB.open(options, baseDir.getAbsolutePath());
+            } else {
+                db = RocksDB.openReadOnly(options, baseDir.getAbsolutePath());
+            }
+
+            System.out.println("db initialized " + dbname);
         } catch(IOException | RocksDBException e) {
             System.out.printf("Error initializng. Exception: '%s', message: '%s', %s", e.getCause(), e.getMessage(), e);
         }
     }
 
     public synchronized boolean save(String key, String value) {
-        System.out.println("Save files");
         try {
             db.put(key.getBytes(), value.getBytes());
         } catch (RocksDBException e) {
@@ -59,12 +70,25 @@ public class RocksDBRepository{
                     e.getMessage()
             );
         }
-        System.out.printf("По ключу %s нашли %s%n", key, value);
         return value;
     }
 
+    public boolean isInBase(String key) {
+        byte[] bytes = null;
+        try {
+            bytes = db.get(key.getBytes());
+        } catch (RocksDBException e) {
+            System.out.printf(
+                    "Error retrieving the entry with key: %s, cause: %s, message: %s",
+                    key,
+                    e.getCause(),
+                    e.getMessage()
+            );
+        }
+        return bytes != null;
+    }
+
     public synchronized boolean delete(String key) {
-        System.out.println("Удаляем ключ с базы");
         try {
             db.delete(key.getBytes());
         } catch (RocksDBException e) {
@@ -75,11 +99,8 @@ public class RocksDBRepository{
         return true;
     }
 
-    public void print() {
-        RocksIterator iter = db.newIterator();
-        for (iter.seekToFirst(); iter.isValid(); iter.next()) {
-            System.out.println("iterator key:" + new String(iter.key()) + ", iter value:" + new String(iter.value()));
-        }
+    public RocksIterator print() {
+        return db.newIterator();
     }
 
     public long countLines() {
@@ -92,17 +113,24 @@ public class RocksDBRepository{
     }
 
     public void close() {
+//        try {
+//            System.out.println(db.getProperty("rocksdb.stats"));
+//        } catch (RocksDBException e) {
+//            e.printStackTrace();
+//        } finally {
+//            db.close();
+//        }
         db.close();
     }
 
-    public static void main(String[] args) throws RocksDBException {
-        RocksDBRepository database = new RocksDBRepository("gnomik");
-
-        database.save("kaka", "baka1");
-        database.save("kaka22", "baka1");
-        database.save("kaka23", "baka1");
-        System.out.println(database.find("kak"));
-        database.print();
-        System.out.println(database.countLines());
+    public static void main(String[] args) {
+        RocksDBRepository db = new RocksDBRepository("mail", true);
+        System.out.println(db.isInBase("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
+        System.out.println(db.find("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
+        System.out.println(db.save("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz",
+                "donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
+        System.out.println(db.find("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
+        db.close();
     }
+
 }

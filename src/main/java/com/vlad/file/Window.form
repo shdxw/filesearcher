@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.vlad.file.Window">
-  <grid id="27dc6" binding="mainFrame" layout-manager="GridLayoutManager" row-count="8" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-    <margin top="0" left="0" bottom="0" right="0"/>
+  <grid id="27dc6" binding="mainFrame" layout-manager="GridLayoutManager" row-count="7" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="10" left="20" bottom="10" right="20"/>
     <constraints>
-      <xy x="20" y="20" width="500" height="400"/>
+      <xy x="20" y="20" width="500" height="478"/>
     </constraints>
-    <properties/>
-    <border type="none"/>
+    <properties>
+      <background color="-12303292"/>
+      <foreground color="-13679615"/>
+      <requestFocusEnabled value="true"/>
+    </properties>
+    <border type="etched">
+      <font/>
+      <title-color color="-4473925"/>
+    </border>
     <children>
       <component id="c9ca5" class="javax.swing.JCheckBox" binding="domenCheck">
         <constraints>
@@ -15,6 +22,14 @@
           </grid>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <borderPainted value="false"/>
+          <borderPaintedFlat value="true"/>
+          <focusPainted value="false"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
+          <hideActionText value="false"/>
+          <selected value="true"/>
           <text value="С доменом"/>
         </properties>
       </component>
@@ -25,6 +40,11 @@
           </grid>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <focusPainted value="false"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
+          <selected value="true"/>
           <text value="Без домена"/>
         </properties>
       </component>
@@ -35,6 +55,11 @@
           </grid>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <focusPainted value="false"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
+          <selected value="true"/>
           <text value="Убрать дубли"/>
         </properties>
       </component>
@@ -45,6 +70,13 @@
           </grid>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <borderPainted value="false"/>
+          <focusPainted value="false"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
+          <opaque value="false"/>
+          <selected value="true"/>
           <text value="Сравнить с базой"/>
         </properties>
       </component>
@@ -55,6 +87,14 @@
           </grid>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <contentAreaFilled value="true"/>
+          <defaultCapable value="true"/>
+          <doubleBuffered value="false"/>
+          <focusCycleRoot value="false"/>
+          <focusTraversalPolicyProvider value="false"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
           <text value="Добавить файлы"/>
         </properties>
       </component>
@@ -63,22 +103,10 @@
           <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
           <text value="Запустить"/>
-        </properties>
-      </component>
-      <component id="caf70" class="javax.swing.JTextField" binding="textField">
-        <constraints>
-          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="0" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-        </constraints>
-        <properties>
-          <columns value="6"/>
-          <editable value="true"/>
-          <enabled value="true"/>
-          <horizontalAlignment value="0"/>
-          <text value="400000"/>
-          <toolTipText value="число строк в файле"/>
         </properties>
       </component>
       <component id="57deb" class="javax.swing.JProgressBar" binding="progressBar1" default-binding="true">
@@ -86,30 +114,22 @@
           <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <stringPainted value="true"/>
-        </properties>
-      </component>
-      <component id="77d30" class="javax.swing.JButton" binding="saveBaseButton">
-        <constraints>
-          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Сохранить базу"/>
-        </properties>
-      </component>
-      <component id="493b9" class="javax.swing.JProgressBar" binding="progressBar2">
-        <constraints>
-          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
+          <background color="-12303292"/>
+          <borderPainted value="true"/>
+          <focusable value="false"/>
+          <opaque value="false"/>
+          <requestFocusEnabled value="false"/>
           <stringPainted value="true"/>
         </properties>
       </component>
       <component id="b7e90" class="javax.swing.JButton" binding="splitBaseBtn">
         <constraints>
-          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <font name="Consolas" size="12" style="0"/>
+          <foreground color="-3355444"/>
           <text value="Разделить базу"/>
         </properties>
       </component>

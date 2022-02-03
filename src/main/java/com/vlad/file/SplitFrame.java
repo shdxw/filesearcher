@@ -1,8 +1,9 @@
 package com.vlad.file;
 
+import com.vlad.file.db.RocksDBRepository;
+import org.rocksdb.RocksIterator;
+
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,7 +30,7 @@ public class SplitFrame extends JFrame {
 
         setResizable(false);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         textField1.setColumns(6);
         textField2.setColumns(6);
         comboBox1.addItem("mb");
@@ -125,16 +126,9 @@ public class SplitFrame extends JFrame {
     //сохраняем базы по кол-ву строк
     private void saveFiles(int count, String packname) throws IOException {
 
-        File tempfile = null;
-        try {
-            tempfile = takeFile(packname);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(splitFrame, "Базы не существует");
-            e.printStackTrace();
-            return;
-        }
+        RocksDBRepository db = new RocksDBRepository(packname, false);
 
-        float lines = (float) countLines(packname);
+        float lines = db.countLines();
         float oldLines = lines;
         Date date = new Date();
 
@@ -142,16 +136,19 @@ public class SplitFrame extends JFrame {
         String trueDate = dateS[1] + "_" + dateS[2] + "_" + dateS[3].replace(":", "-");
 
         List<String> list = new ArrayList<>();
-        try (Scanner reader = new Scanner(tempfile)) {
+
+        RocksIterator iter = db.print();
+
             int chet = 0;
             int num = 1;
-            while (reader.hasNextLine()) {
-//                String extraName = domen ? "mail" : "login";
+        for (iter.seekToFirst(); iter.isValid(); iter.next())  {
+//
                 File filePath = new File(makeFileName(countFiles(packname), trueDate, count, packname));
                 try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                         new FileOutputStream(filePath)))) {
-                    while (reader.hasNextLine()) {
-                        writer.write(reader.nextLine() + System.getProperty("line.separator"));
+
+                    for (iter.key(); iter.isValid(); iter.next())  {
+                        writer.write(new String(iter.value()) + System.getProperty("line.separator"));
                         chet += 1;
                         lines -= 1;
                         if (chet == count) {
@@ -170,9 +167,6 @@ public class SplitFrame extends JFrame {
                 list.add(filePath.getAbsolutePath());
             }
             setMessage(list);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         progressBar1.setValue(0);
     }
 
@@ -286,7 +280,7 @@ public class SplitFrame extends JFrame {
 
     private boolean checkFile(String filename) {
         String path = System.getProperty("user.dir");
-        File filePath = new File(path + "/" + "final" + "/" + filename + ".txt");
+        File filePath = new File(path + "/" + "databases" + "/" + filename);
         return filePath.exists();
     }
 
