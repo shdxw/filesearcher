@@ -225,6 +225,7 @@ public class Window extends JFrame {
         btnOpenDir.setDefaultCapable(true);
         btnOpenDir.setDoubleBuffered(false);
         btnOpenDir.setFocusCycleRoot(false);
+        btnOpenDir.setFocusPainted(false);
         btnOpenDir.setFocusTraversalPolicyProvider(false);
         Font btnOpenDirFont = this.$$$getFont$$$("Consolas", Font.PLAIN, 12, btnOpenDir.getFont());
         if (btnOpenDirFont != null) btnOpenDir.setFont(btnOpenDirFont);
@@ -233,6 +234,7 @@ public class Window extends JFrame {
         mainFrame.add(btnOpenDir, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(196, 30), null, 0, false));
         btnRun = new JButton();
         btnRun.setBackground(new Color(-12303292));
+        btnRun.setFocusPainted(false);
         Font btnRunFont = this.$$$getFont$$$("Consolas", Font.PLAIN, 12, btnRun.getFont());
         if (btnRunFont != null) btnRun.setFont(btnRunFont);
         btnRun.setForeground(new Color(-3355444));
@@ -248,6 +250,7 @@ public class Window extends JFrame {
         mainFrame.add(progressBar1, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         splitBaseBtn = new JButton();
         splitBaseBtn.setBackground(new Color(-12303292));
+        splitBaseBtn.setFocusPainted(false);
         Font splitBaseBtnFont = this.$$$getFont$$$("Consolas", Font.PLAIN, 12, splitBaseBtn.getFont());
         if (splitBaseBtnFont != null) splitBaseBtn.setFont(splitBaseBtnFont);
         splitBaseBtn.setForeground(new Color(-3355444));

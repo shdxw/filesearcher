@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
@@ -45,8 +46,9 @@ public class SplitFrame extends JFrame {
 
         sumBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                getLinesBases("mail");
                 getLinesBases("login");
+                getLinesBases("mail");
+
             }
         });
     }
@@ -141,36 +143,33 @@ public class SplitFrame extends JFrame {
         RocksIterator iter = db.print();
 
         int chet = 0;
-        int num = 1;
-        iter.seekToFirst();
-        while (iter.isValid()) {
-//
-            File filePath = new File(makeFileName(countFiles(packname), trueDate, count, packname));
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(filePath)))) {
 
-                while (iter.isValid()) {
+        int countFiles = countFiles(packname);
+        for (iter.seekToLast(); iter.isValid(); iter.prev()) {
+//
+            File filePath = new File(makeFileName(countFiles, trueDate, count, packname));
+            try (Writer writer = new BufferedWriter(new FileWriter(filePath))) {
+
+                for (; iter.isValid(); iter.prev()) {
                     writer.write(new String(iter.value()) + System.getProperty("line.separator"));
                     chet += 1;
                     lines -= 1;
                     if (chet == count) {
+                        countFiles++;
                         double val = (((oldLines - lines) / (double) oldLines) * 100.0);
-                        System.out.println(oldLines + lines);
                         System.out.println(val);
                         progressBar1.setValue((int) val);
                         chet = 0;
-                        num += 1;
                         break;
                     }
-                    iter.next();
                 }
             }
             if (chet != 0) {
                 filePath = rename(chet, filePath);
             }
             list.add(filePath.getAbsolutePath());
-            iter.next();
         }
+        System.out.println(100);
         setMessage(list);
         progressBar1.setValue(0);
     }
@@ -178,63 +177,56 @@ public class SplitFrame extends JFrame {
     //сохраняем базы по размеру
     private void saveFiles(int count, String size, String packname) throws IOException {
 
+        RocksDBRepository db = new RocksDBRepository(packname, false);
+
+        long lines = db.countLines();
+        long oldLines = lines;
+
         if (size.equals("mb")) {
             count = count * 1024 * 1024;
         } else {
             count = count * 1024;
         }
 
-        File tempfile = null;
-        try {
-            tempfile = takeFile(packname);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(splitFrame, "Базы не существует");
-            e.printStackTrace();
-            return;
-        }
-
-        float lines = (float) countLines(packname);
-        float oldLines = lines;
         Date date = new Date();
 
         String[] dateS = date.toString().split(" ");
         String trueDate = dateS[1] + "_" + dateS[2] + "_" + dateS[3].replace(":", "-");
 
+        RocksIterator iter = db.print();
+
         List<String> list = new ArrayList<>();
-        try (Scanner reader = new Scanner(tempfile)) {
-            int chet = 0;
-            int chet2 = 0;
-            while (reader.hasNextLine()) {
-//                String extraName = domen ? "mail" : "login";
-                File filePath = new File(makeFileName(countFiles(packname), trueDate, count, packname));
-                try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(filePath)))) {
-                    while (reader.hasNextLine()) {
-                        String name = reader.nextLine() + System.getProperty("line.separator");
-                        writer.write(name);
-                        chet += name.getBytes("UTF-8").length;
-                        System.out.println(chet);
-                        chet2 += 1;
-                        lines -= 1;
-                        if (chet >= count) {
-                            float val = (float) (((oldLines - lines) / oldLines) * 100.0);
-                            System.out.println(val);
-                            progressBar1.setValue((int) val);
-//                            filePath = rename(chet2, filePath);
-                            chet = 0;
-                            break;
-                        }
+        int chet = 0;
+        int chet2 = 0;
+        int countFiles = countFiles(packname);
+        for (iter.seekToLast(); iter.isValid(); iter.prev()) {
+
+            File filePath = new File(makeFileName(countFiles, trueDate, count, packname));
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(filePath)))) {
+                for (; iter.isValid(); iter.prev()) {
+                    String name = new String(iter.value()) + System.getProperty("line.separator");
+                    writer.write(name);
+                    chet += name.getBytes(StandardCharsets.UTF_8).length;
+                    chet2 += 1;
+                    lines -= 1;
+                    if (chet >= count) {
+                        countFiles++;
+                        double val = (((oldLines - lines) / (double) oldLines) * 100.0);
+                        System.out.println(val);
+                        progressBar1.setValue((int) val);
+                        chet = 0;
+                        break;
                     }
                 }
-                filePath = rename(chet2, filePath);
-                chet2 = 0;
-                list.add(filePath.getAbsolutePath());
             }
-            setMessage(list);
-        } catch (IOException e) {
-            e.printStackTrace();
+            filePath = rename(chet2, filePath);
+            chet2 = 0;
+            list.add(filePath.getAbsolutePath());
         }
+        System.out.println(100);
         progressBar1.setValue(0);
+        setMessage(list);
     }
 
     private File rename(int count, File filePath) throws IOException {
@@ -305,21 +297,44 @@ public class SplitFrame extends JFrame {
      */
     private void $$$setupUI$$$() {
         splitFrame = new JPanel();
-        splitFrame.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 3, new Insets(0, 0, 0, 0), -1, -1));
+        splitFrame.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 3, new Insets(10, 20, 10, 20), -1, -1));
+        splitFrame.setBackground(new Color(-12303292));
+        splitFrame.putClientProperty("html.disable", Boolean.FALSE);
         weightBtn = new JButton();
+        weightBtn.setBackground(new Color(-12303292));
+        weightBtn.setBorderPainted(true);
+        weightBtn.setContentAreaFilled(true);
+        weightBtn.setDefaultCapable(true);
+        weightBtn.setFocusPainted(false);
+        weightBtn.setForeground(new Color(-3355444));
         weightBtn.setText("Разбить по размеру");
+        weightBtn.putClientProperty("html.disable", Boolean.FALSE);
         splitFrame.add(weightBtn, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         sumBtn = new JButton();
+        sumBtn.setBackground(new Color(-12303292));
+        sumBtn.setFocusPainted(false);
+        sumBtn.setForeground(new Color(-3355444));
         sumBtn.setText("Разбить по строкам ");
         splitFrame.add(sumBtn, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         textField1 = new JTextField();
+        textField1.setForeground(new Color(-3355444));
+        textField1.setOpaque(false);
+        textField1.setSelectedTextColor(new Color(-3355444));
         textField1.setText("");
+        textField1.putClientProperty("html.disable", Boolean.TRUE);
         splitFrame.add(textField1, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         textField2 = new JTextField();
+        textField2.setBackground(new Color(-3355444));
+        textField2.setFocusable(true);
+        textField2.setForeground(new Color(-3355444));
+        textField2.setOpaque(false);
         splitFrame.add(textField2, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         comboBox1 = new JComboBox();
+        comboBox1.setOpaque(false);
         splitFrame.add(comboBox1, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(75, -1), null, 0, false));
         progressBar1 = new JProgressBar();
+        progressBar1.setForeground(new Color(-12303292));
+        progressBar1.setOpaque(false);
         progressBar1.setStringPainted(true);
         splitFrame.add(progressBar1, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 3, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }

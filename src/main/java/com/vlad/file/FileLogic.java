@@ -28,7 +28,7 @@ public class FileLogic {
     private boolean domen;
     private boolean withoutDomen;
     private JProgressBar progressBar;
-   // private final Charset CODE = StandardCharsets.UTF_8;
+    // private final Charset CODE = StandardCharsets.UTF_8;
     private final Charset CODE = StandardCharsets.ISO_8859_1;
     private final int BUFFERSIZE = 1310720 * 2 * 2;
     private final File PLACE = new File(System.getProperty("user.dir") + "/TEMP");
@@ -71,28 +71,27 @@ public class FileLogic {
         int newCount = count.get() / sum; //сумма за процент
         count.set(0);
 
-        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
+        try (Stream<String> stream = Files.newBufferedReader(Paths.get(String.valueOf(tempfile)), CODE).lines().parallel();
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
             stream
-//                    .parallel()
                     .forEach(
-                    e -> {
-                        if (!db.isInBase(e)) {
-                            try {
-                                writer.write(e + System.lineSeparator());
-                                count.getAndIncrement();
-                            } catch (IOException ioException) {
-                                ioException.printStackTrace();
+                            e -> {
+                                if (!db.isInBase(e)) {
+                                    try {
+                                        writer.write(e + System.lineSeparator());
+                                        count.getAndIncrement();
+                                    } catch (IOException ioException) {
+                                        ioException.printStackTrace();
+                                    }
+                                }
                             }
-                        }
-                    }
-            );
+                    );
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("Счетчик: " + count.toString());
         db.close();
-        System.out.println(outputFile.length()/(1024*1024)+" mb - в методе");
+        System.out.println(outputFile.length() / (1024 * 1024) + " mb - в методе");
 
         Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
@@ -102,16 +101,15 @@ public class FileLogic {
     private void writeFile(File tempfile) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempfile, CODE), BUFFERSIZE)) {
             for (int i = 0; i < files.size(); i++) {
-                try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(files.get(i))), CODE)) {
+                try (Stream<String> stream = Files.newBufferedReader(Paths.get(String.valueOf(files.get(i))), CODE).lines().parallel()) {
                     stream
-//                            .parallel()
                             .forEach(a -> {
-                        try {
-                            writer.write(a + System.lineSeparator());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                                try {
+                                    writer.write(a + System.lineSeparator());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -124,22 +122,22 @@ public class FileLogic {
     private void cleanFile(File tempfile) throws IOException { //
         File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
-        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
-             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
-            stream
-//                    .parallel()
-                    .forEach(line -> {
-                line = line.trim();
-                line = line.replace(';', ':');
-                line = line.replaceAll("\"", "");
-                if (VALID_STRING.matcher(line).matches()) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
+            try (Stream<String> stream = Files.newBufferedReader(Paths.get(String.valueOf(tempfile)), CODE).lines().parallel()) {
+                stream
+                        .filter(line -> {
+                            line = line.trim();
+                            line = line.replace(';', ':');
+                            line = line.replaceAll("\"", "");
+                            return VALID_STRING.matcher(line).matches();
+                        }).forEach(line -> {
                     try {
                         writer.write(line + System.lineSeparator());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-            });
+                });
+            }
         }
 
         Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -149,7 +147,7 @@ public class FileLogic {
         int detected = 0;
 
         Set<String> lines = new HashSet<>();
-        try(Scanner reader = new Scanner(tempfile, CODE)) {
+        try (Scanner reader = new Scanner(tempfile, CODE)) {
             while (reader.hasNextLine()) {
                 if (!lines.add(reader.nextLine())) {
                     detected++;
@@ -170,25 +168,24 @@ public class FileLogic {
     private void normalizeDomen(File tempfile) throws IOException {
         File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
-        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
+        try (Stream<String> stream = Files.newBufferedReader(Paths.get(String.valueOf(tempfile)), CODE).lines().parallel();
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
             stream
-//                    .parallel()
                     .forEach(line -> {
-                try {
-                    String[] data = line.split(":");
-                    if (data.length > 1) {
-                        line = data[0].trim();
-                        String pass = data[1].trim();
-                        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(line);
-                        if (matcher.find() && !pass.equals(" ")) {
-                            writer.write(line + ":" + pass + System.lineSeparator());
+                        try {
+                            String[] data = line.split(":");
+                            if (data.length > 1) {
+                                line = data[0].trim();
+                                String pass = data[1].trim();
+                                Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(line);
+                                if (matcher.find() && !pass.equals(" ")) {
+                                    writer.write(line + ":" + pass + System.lineSeparator());
+                                }
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+                    });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -198,28 +195,27 @@ public class FileLogic {
     private void normalizeLogin(File tempfile) throws IOException {
         File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
-        try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
+        try (Stream<String> stream = Files.newBufferedReader(Paths.get(String.valueOf(tempfile)), CODE).lines().parallel();
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
             stream
-//                    .parallel()
                     .forEach(line -> {
-                String[] data = line.split(":");
-                if (data.length > 1) {
-                    line = data[0].trim();
-                    String pass = data[1].trim();
-                    Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(line);
-                    if (matcher.find()) {
-                        line = line.split("@")[0];
-                    }
-                    if (!pass.equals(" ")) {
-                        try {
-                            writer.write(line + ":" + pass + System.lineSeparator());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String[] data = line.split(":");
+                        if (data.length > 1) {
+                            line = data[0].trim();
+                            String pass = data[1].trim();
+                            Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(line);
+                            if (matcher.find()) {
+                                line = line.split("@")[0];
+                            }
+                            if (!pass.equals(" ")) {
+                                try {
+                                    writer.write(line + ":" + pass + System.lineSeparator());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
-                    }
-                }
-            });
+                    });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -352,8 +348,8 @@ public class FileLogic {
             }
             setProgress(90);
             System.out.println(90);
-            System.out.println(newFile.length()/(1024*1024)+" mb");
-            System.out.println(newFile2.length()/(1024*1024)+" mb");
+            System.out.println(newFile.length() / (1024 * 1024) + " mb");
+            System.out.println(newFile2.length() / (1024 * 1024) + " mb");
 
             //-------------------------------
             if (domen && withoutDomen) {

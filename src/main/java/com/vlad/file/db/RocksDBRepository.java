@@ -131,7 +131,11 @@ public class RocksDBRepository {
     }
 
     public static void main(String[] args) throws IOException {
-
-        FileUtils.forceDelete(new File("C:\\projects\\filecrack\\TEMP\\text16183689624325815467.temp"));
+        RocksDB.loadLibrary();
+        RocksDBRepository db = new RocksDBRepository("mail", false);
+        var iter = db.print();
+        for (iter.seekToLast(); iter.isValid(); iter.prev()) {
+            System.out.println(new String(iter.value()));
+        }
     }
 }

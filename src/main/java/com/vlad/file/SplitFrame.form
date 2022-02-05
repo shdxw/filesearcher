@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.vlad.file.SplitFrame">
   <grid id="27dc6" binding="splitFrame" layout-manager="GridLayoutManager" row-count="3" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-    <margin top="0" left="0" bottom="0" right="0"/>
+    <margin top="10" left="20" bottom="10" right="20"/>
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
     </constraints>
-    <properties/>
+    <properties>
+      <background color="-12303292"/>
+    </properties>
+    <clientProperties>
+      <html.disable class="java.lang.Boolean" value="false"/>
+    </clientProperties>
     <border type="none"/>
     <children>
       <component id="3364d" class="javax.swing.JButton" binding="weightBtn">
@@ -13,14 +18,26 @@
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <borderPainted value="true"/>
+          <contentAreaFilled value="true"/>
+          <defaultCapable value="true"/>
+          <focusPainted value="false"/>
+          <foreground color="-3355444"/>
           <text value="Разбить по размеру"/>
         </properties>
+        <clientProperties>
+          <html.disable class="java.lang.Boolean" value="false"/>
+        </clientProperties>
       </component>
       <component id="8227f" class="javax.swing.JButton" binding="sumBtn">
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <background color="-12303292"/>
+          <focusPainted value="false"/>
+          <foreground color="-3355444"/>
           <text value="Разбить по строкам "/>
         </properties>
       </component>
@@ -31,8 +48,14 @@
           </grid>
         </constraints>
         <properties>
+          <foreground color="-3355444"/>
+          <opaque value="false"/>
+          <selectedTextColor color="-3355444"/>
           <text value=""/>
         </properties>
+        <clientProperties>
+          <html.disable class="java.lang.Boolean" value="true"/>
+        </clientProperties>
       </component>
       <component id="1b260" class="javax.swing.JTextField" binding="textField2" default-binding="true">
         <constraints>
@@ -40,7 +63,12 @@
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <background color="-3355444"/>
+          <focusable value="true"/>
+          <foreground color="-3355444"/>
+          <opaque value="false"/>
+        </properties>
       </component>
       <component id="7d6b" class="javax.swing.JComboBox" binding="comboBox1" default-binding="true">
         <constraints>
@@ -48,13 +76,17 @@
             <preferred-size width="75" height="-1"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <opaque value="false"/>
+        </properties>
       </component>
       <component id="32053" class="javax.swing.JProgressBar" binding="progressBar1" default-binding="true">
         <constraints>
           <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <foreground color="-12303292"/>
+          <opaque value="false"/>
           <stringPainted value="true"/>
         </properties>
       </component>
