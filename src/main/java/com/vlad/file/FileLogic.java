@@ -1,6 +1,9 @@
 package com.vlad.file;
 
 import com.vlad.file.db.RocksDBRepository;
+import org.apache.commons.io.FileUtils;
+import org.rocksdb.RocksDBException;
+import org.rocksdb.WriteBatch;
 
 import javax.swing.*;
 import java.io.*;
@@ -25,8 +28,10 @@ public class FileLogic {
     private boolean domen;
     private boolean withoutDomen;
     private JProgressBar progressBar;
-    private final Charset CODE = StandardCharsets.UTF_8;
+   // private final Charset CODE = StandardCharsets.UTF_8;
+    private final Charset CODE = StandardCharsets.ISO_8859_1;
     private final int BUFFERSIZE = 1310720 * 2 * 2;
+    private final File PLACE = new File(System.getProperty("user.dir") + "/TEMP");
 
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
@@ -46,7 +51,8 @@ public class FileLogic {
     }
 
     public long deleteBase(File tempfile, String pack, int init, int sum) throws IOException {
-        File outputFile = File.createTempFile("text2", ".temp", null);
+        File outputFile = File.createTempFile("text2", ".temp", PLACE);
+        outputFile.createNewFile();
         RocksDBRepository db = new RocksDBRepository(pack, false);
 
         long detect = db.countLines(); // всего в базе
@@ -67,7 +73,9 @@ public class FileLogic {
 
         try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
-            stream.parallel().forEach(
+            stream
+//                    .parallel()
+                    .forEach(
                     e -> {
                         if (!db.isInBase(e)) {
                             try {
@@ -84,8 +92,9 @@ public class FileLogic {
         }
         System.out.println("Счетчик: " + count.toString());
         db.close();
-        tempfile.delete();
-        outputFile.renameTo(tempfile);
+        System.out.println(outputFile.length()/(1024*1024)+" mb - в методе");
+
+        Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         return detect;
     }
@@ -94,7 +103,9 @@ public class FileLogic {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempfile, CODE), BUFFERSIZE)) {
             for (int i = 0; i < files.size(); i++) {
                 try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(files.get(i))), CODE)) {
-                    stream.parallel().forEach(a -> {
+                    stream
+//                            .parallel()
+                            .forEach(a -> {
                         try {
                             writer.write(a + System.lineSeparator());
                         } catch (IOException e) {
@@ -111,11 +122,13 @@ public class FileLogic {
     }
 
     private void cleanFile(File tempfile) throws IOException { //
-        File outputFile = File.createTempFile("text2", ".temp", null);
+        File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
         try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
-            stream.parallel().forEach(line -> {
+            stream
+//                    .parallel()
+                    .forEach(line -> {
                 line = line.trim();
                 line = line.replace(';', ':');
                 line = line.replaceAll("\"", "");
@@ -128,8 +141,8 @@ public class FileLogic {
                 }
             });
         }
-        tempfile.delete();
-        outputFile.renameTo(tempfile);
+
+        Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private int deleteDoubles(File tempfile) throws IOException {
@@ -155,11 +168,13 @@ public class FileLogic {
     }
 
     private void normalizeDomen(File tempfile) throws IOException {
-        File outputFile = File.createTempFile("text2", ".temp", null);
+        File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
         try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
-            stream.parallel().forEach(line -> {
+            stream
+//                    .parallel()
+                    .forEach(line -> {
                 try {
                     String[] data = line.split(":");
                     if (data.length > 1) {
@@ -177,16 +192,17 @@ public class FileLogic {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        tempfile.delete();
-        outputFile.renameTo(tempfile);
+        Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void normalizeLogin(File tempfile) throws IOException {
-        File outputFile = File.createTempFile("text2", ".temp", null);
+        File outputFile = File.createTempFile("text2", ".temp", PLACE);
 
         try (Stream<String> stream = Files.lines(Paths.get(String.valueOf(tempfile)), CODE);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile), BUFFERSIZE)) {
-            stream.parallel().forEach(line -> {
+            stream
+//                    .parallel()
+                    .forEach(line -> {
                 String[] data = line.split(":");
                 if (data.length > 1) {
                     line = data[0].trim();
@@ -207,8 +223,8 @@ public class FileLogic {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        tempfile.delete();
-        outputFile.renameTo(tempfile);
+
+        Files.move(outputFile.toPath(), tempfile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     private long saveFiles(File tempfile, String database) {
@@ -218,15 +234,20 @@ public class FileLogic {
         RocksDBRepository db = new RocksDBRepository(database, true);//TODO: improve
 
         try (Scanner reader = new Scanner(tempfile)) {
-
+            WriteBatch batch = new WriteBatch();
+            long count = 0;
             while (reader.hasNextLine()) {
-                while (reader.hasNextLine()) {
+                while (reader.hasNextLine() && count <= 10_000_000) {
                     String line = reader.nextLine();
-                    db.save(line, line);
+                    batch.put(line.getBytes(), line.getBytes());
                     detectLogin++;
+                    count++;
                 }
+                count = 0;
+                db.writeBatch(batch);
+                batch.clear();
             }
-        } catch (IOException e) {
+        } catch (IOException | RocksDBException e) {
             e.printStackTrace();
         }
         db.close();
@@ -280,8 +301,10 @@ public class FileLogic {
 
             long time = System.nanoTime();
 
-            File newFile = File.createTempFile("text", ".temp", null);
-            File newFile2 = File.createTempFile("text23", ".temp", null);
+            PLACE.mkdirs();
+            File newFile = File.createTempFile("text", ".temp", PLACE);
+            File newFile2 = File.createTempFile("text23", ".temp", PLACE);
+
             createBases();
 
             System.out.println(5);
@@ -356,7 +379,6 @@ public class FileLogic {
             newFile.deleteOnExit();
 
             MessageFinal dialog = new MessageFinal();
-            dialog.setLocationRelativeTo(progressBar);
             dialog.setL1(String.format("Почт в базе: %d", detectBeforeMail));
             dialog.setL2(String.format("Логинов в базе: %d", detectBeforeLogin));
             dialog.setL3(String.format("Дублей удалено: %d", detectDoubles));
@@ -365,6 +387,7 @@ public class FileLogic {
             dialog.setL6(String.format("Почт после обработки: %d", detectAfterMail));
             dialog.setL7(String.format("Логинов после обработки: %d", detectAfterLogin));
             dialog.setL8(String.format("Выполнено за %.2f sec\n", time / 1_000_000.0 / 1000));
+            dialog.setLocationRelativeTo(null);
             dialog.pack();
             dialog.setVisible(true);
 

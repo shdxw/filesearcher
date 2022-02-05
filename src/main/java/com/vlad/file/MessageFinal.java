@@ -55,8 +55,8 @@ public class MessageFinal extends JDialog {
     }
 
     public MessageFinal() {
-
         setContentPane(contentPane);
+        setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
         buttonOK.addActionListener(new ActionListener() {

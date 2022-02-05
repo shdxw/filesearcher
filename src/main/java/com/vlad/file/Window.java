@@ -1,5 +1,7 @@
 package com.vlad.file;
 
+import org.rocksdb.RocksDB;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -152,6 +154,7 @@ public class Window extends JFrame {
     public static void main(String[] args) throws IOException {
         UIManager.getInstalledLookAndFeels();
         new Window();
+        RocksDB.loadLibrary();
     }
 
     {

@@ -125,11 +125,12 @@ public class SplitFrame extends JFrame {
 
     //сохраняем базы по кол-ву строк
     private void saveFiles(int count, String packname) throws IOException {
+        System.out.println(count + " кол-во строк");
 
         RocksDBRepository db = new RocksDBRepository(packname, false);
 
-        float lines = db.countLines();
-        float oldLines = lines;
+        long lines = db.countLines();
+        long oldLines = lines;
         Date date = new Date();
 
         String[] dateS = date.toString().split(" ");
@@ -139,34 +140,38 @@ public class SplitFrame extends JFrame {
 
         RocksIterator iter = db.print();
 
-            int chet = 0;
-            int num = 1;
-        for (iter.seekToFirst(); iter.isValid(); iter.next())  {
+        int chet = 0;
+        int num = 1;
+        iter.seekToFirst();
+        while (iter.isValid()) {
 //
-                File filePath = new File(makeFileName(countFiles(packname), trueDate, count, packname));
-                try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(filePath)))) {
+            File filePath = new File(makeFileName(countFiles(packname), trueDate, count, packname));
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(filePath)))) {
 
-                    for (iter.key(); iter.isValid(); iter.next())  {
-                        writer.write(new String(iter.value()) + System.getProperty("line.separator"));
-                        chet += 1;
-                        lines -= 1;
-                        if (chet == count) {
-                            float val = (float) (((oldLines - lines) / oldLines) * 100.0);
-                            System.out.println(val);
-                            progressBar1.setValue((int) val);
-                            chet = 0;
-                            num += 1;
-                            break;
-                        }
+                while (iter.isValid()) {
+                    writer.write(new String(iter.value()) + System.getProperty("line.separator"));
+                    chet += 1;
+                    lines -= 1;
+                    if (chet == count) {
+                        double val = (((oldLines - lines) / (double) oldLines) * 100.0);
+                        System.out.println(oldLines + lines);
+                        System.out.println(val);
+                        progressBar1.setValue((int) val);
+                        chet = 0;
+                        num += 1;
+                        break;
                     }
+                    iter.next();
                 }
-                if (chet != 0) {
-                    filePath = rename(chet, filePath);
-                }
-                list.add(filePath.getAbsolutePath());
             }
-            setMessage(list);
+            if (chet != 0) {
+                filePath = rename(chet, filePath);
+            }
+            list.add(filePath.getAbsolutePath());
+            iter.next();
+        }
+        setMessage(list);
         progressBar1.setValue(0);
     }
 

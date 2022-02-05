@@ -1,10 +1,13 @@
 package com.vlad.file.db;
 
+import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 
 public class RocksDBRepository {
@@ -12,13 +15,12 @@ public class RocksDBRepository {
     private RocksDB db;
 
     public RocksDBRepository(String dbname, boolean open) {
-        RocksDB.loadLibrary();
         Statistics stat = new Statistics();
         final Options options = new Options();
         options.setCreateIfMissing(true) //если базы нет, создается новая
                 .setCompressionType(CompressionType.SNAPPY_COMPRESSION) //обычная компрессия
-                .setIncreaseParallelism(8)
-                .setMaxBackgroundJobs(8)
+                .setIncreaseParallelism(12)
+                .setMaxBackgroundJobs(12)
                 .setEnablePipelinedWrite(true)
                 .setWriteBufferSize(1000 * 1024 * 1024)
                 .setStatistics(stat); //разрешаем паралельки
@@ -88,6 +90,11 @@ public class RocksDBRepository {
         return bytes != null;
     }
 
+    public void writeBatch(WriteBatch batch) throws RocksDBException {
+        WriteOptions writeOpt = new WriteOptions();
+        db.write(writeOpt, batch);
+    }
+
     public synchronized boolean delete(String key) {
         try {
             db.delete(key.getBytes());
@@ -123,14 +130,8 @@ public class RocksDBRepository {
         db.close();
     }
 
-    public static void main(String[] args) {
-        RocksDBRepository db = new RocksDBRepository("mail", true);
-        System.out.println(db.isInBase("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
-        System.out.println(db.find("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
-        System.out.println(db.save("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz",
-                "donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
-        System.out.println(db.find("donovancho@gmail.com:$S$DaXGi6rsw3DIOC1lZna5YDKJhNEYuUvmvWYqAdkyZ6e7DPvr0Skz"));
-        db.close();
-    }
+    public static void main(String[] args) throws IOException {
 
+        FileUtils.forceDelete(new File("C:\\projects\\filecrack\\TEMP\\text16183689624325815467.temp"));
+    }
 }
