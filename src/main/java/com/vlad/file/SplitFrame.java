@@ -81,7 +81,7 @@ public class SplitFrame extends JFrame {
         Runnable runner = new Runnable() {
             public void run() {
                 if (!checkFile(packname)) {
-                    JOptionPane.showMessageDialog(splitFrame, "Базы final/" + packname + " не существует");
+                    JOptionPane.showMessageDialog(splitFrame, "Базы databases/" + packname + " не существует");
                     return;
                 }
                 try {
@@ -151,7 +151,7 @@ public class SplitFrame extends JFrame {
             try (Writer writer = new BufferedWriter(new FileWriter(filePath))) {
 
                 for (; iter.isValid(); iter.prev()) {
-                    writer.write(new String(iter.value()) + System.getProperty("line.separator"));
+                    writer.write(new String(iter.key()) + ":" + new String(iter.value()) + System.getProperty("line.separator"));
                     chet += 1;
                     lines -= 1;
                     if (chet == count) {
@@ -205,7 +205,7 @@ public class SplitFrame extends JFrame {
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(filePath)))) {
                 for (; iter.isValid(); iter.prev()) {
-                    String name = new String(iter.value()) + System.getProperty("line.separator");
+                    String name = new String(iter.key()) + ":" + new String(iter.value()) + System.getProperty("line.separator");
                     writer.write(name);
                     chet += name.getBytes(StandardCharsets.UTF_8).length;
                     chet2 += 1;
@@ -334,7 +334,7 @@ public class SplitFrame extends JFrame {
         splitFrame.add(comboBox1, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(75, -1), null, 0, false));
         progressBar1 = new JProgressBar();
         progressBar1.setForeground(new Color(-12303292));
-        progressBar1.setOpaque(false);
+        progressBar1.setOpaque(true);
         progressBar1.setStringPainted(true);
         splitFrame.add(progressBar1, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 3, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }

@@ -76,7 +76,7 @@ public class FileLogic {
             stream
                     .forEach(
                             e -> {
-                                if (!db.isInBase(e)) {
+                                if (!db.isInBase(e.split(":")[0])) {
                                     try {
                                         writer.write(e + System.lineSeparator());
                                         count.getAndIncrement();
@@ -233,9 +233,10 @@ public class FileLogic {
             WriteBatch batch = new WriteBatch();
             long count = 0;
             while (reader.hasNextLine()) {
+                String key = reader.nextLine();
                 while (reader.hasNextLine() && count <= 10_000_000) {
-                    String line = reader.nextLine();
-                    batch.put(line.getBytes(), line.getBytes());
+                    String[] line = reader.nextLine().split(":");
+                    batch.put(line[0].getBytes(), line[1].getBytes());
                     detectLogin++;
                     count++;
                 }

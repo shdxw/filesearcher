@@ -86,7 +86,7 @@
         </constraints>
         <properties>
           <foreground color="-12303292"/>
-          <opaque value="false"/>
+          <opaque value="true"/>
           <stringPainted value="true"/>
         </properties>
       </component>

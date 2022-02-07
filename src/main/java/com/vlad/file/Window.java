@@ -173,7 +173,7 @@ public class Window extends JFrame {
      */
     private void $$$setupUI$$$() {
         mainFrame = new JPanel();
-        mainFrame.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(7, 2, new Insets(10, 20, 10, 20), -1, -1));
+        mainFrame.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(7, 2, new Insets(0, 0, 0, 0), -1, -1));
         mainFrame.setBackground(new Color(-12303292));
         mainFrame.setForeground(new Color(-13679615));
         mainFrame.setRequestFocusEnabled(true);
